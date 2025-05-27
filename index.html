@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fragebogen</title>
+    <style>
+        /* Alle Styles direkt eingebunden */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f0f2f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #eee;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #4CAF50;
+            border-radius: 5px;
+            transition: width 0.3s ease;
+        }
+        .section {
+            display: none;
+        }
+        .section.active {
+            display: block;
+        }
+        .question {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Online Fragebogen</h1>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress"></div>
+        </div>
+
+        <form id="surveyForm">
+            <!-- Sektion 1 -->
+            <div class="section active" data-section="1">
+                <h2>Persönliche Daten</h2>
+                <div class="question">
+                    <label>Name:</label>
+                    <input type="text" required name="name">
+                </div>
+                <div class="question">
+                    <label>Position:</label>
+                    <input type="text" required name="position">
+                </div>
+            </div>
+
+            <!-- Sektion 2 -->
+            <div class="section" data-section="2">
+                <h2>Berufserfahrung</h2>
+                <div class="question">
+                    <label>Wie lange arbeiten Sie bereits in diesem Bereich?</label>
+                    <input type="text" required name="experience">
+                </div>
+                <div class="question">
+                    <label>Beschreiben Sie Ihre Hauptaufgaben:</label>
+                    <textarea required name="tasks"></textarea>
+                </div>
+            </div>
+
+            <!-- Sektion 3 -->
+            <div class="section" data-section="3">
+                <h2>Abschluss</h2>
+                <div class="question">
+                    <label>Weitere Anmerkungen:</label>
+                    <textarea name="comments"></textarea>
+                </div>
+            </div>
+
+            <div class="navigation">
+                <button type="button" onclick="previousSection()" id="prevBtn" style="display:none">Zurück</button>
+                <button type="button" onclick="nextSection()" id="nextBtn">Weiter</button>
+                <button type="button" onclick="submitForm()" id="submitBtn" style="display:none">Absenden</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        let currentSection = 1;
+        const totalSections = 3;
+
+        // Update Progress Bar
+        function updateProgress() {
+            const progress = (currentSection / totalSections) * 100;
+            document.getElementById('progress').style.width = progress + '%';
+        }
+
+        // Navigation
+        function showSection(sectionNumber) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.querySelector(`.section[data-section="${sectionNumber}"]`).classList.add('active');
+            
+            // Update buttons
+            document.getElementById('prevBtn').style.display = sectionNumber > 1 ? 'inline' : 'none';
+            if (sectionNumber === totalSections) {
+                document.getElementById('nextBtn').style.display = 'none';
+                document.getElementById('submitBtn').style.display = 'inline';
+            } else {
+                document.getElementById('nextBtn').style.display = 'inline';
+                document.getElementById('submitBtn').style.display = 'none';
+            }
+            
+            updateProgress();
+        }
+
+        function nextSection() {
+            if (validateCurrentSection()) {
+                currentSection++;
+                showSection(currentSection);
+            }
+        }
+
+        function previousSection() {
+            if (currentSection > 1) {
+                currentSection--;
+                showSection(currentSection);
+            }
+        }
+
+        // Validation
+        function validateCurrentSection() {
+            const currentSectionElement = document.querySelector(`.section[data-section="${currentSection}"]`);
+            const requiredFields = currentSectionElement.querySelectorAll('[required]');
+            let valid = true;
+
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.style.borderColor = 'red';
+                    valid = false;
+                } else {
+                    field.style.borderColor = '#ddd';
+                }
+            });
+
+            return valid;
+        }
+
+        // Form Submission
+        function submitForm() {
+            if (validateCurrentSection()) {
+                const formData = new FormData(document.getElementById('surveyForm'));
+                const data = Object.fromEntries(formData);
+                
+                // Speichere im localStorage
+                localStorage.setItem('surveyData', JSON.stringify(data));
+                
+                // Zeige Erfolgsmeldung
+                alert('Vielen Dank für Ihre Teilnahme!');
+                
+                // Optional: Formular zurücksetzen
+                document.getElementById('surveyForm').reset();
+                currentSection = 1;
+                showSection(1);
+            }
+        }
+
+        // Initialisierung
+        updateProgress();
+    </script>
+</body>
+</html>
